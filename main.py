@@ -13,7 +13,7 @@ st.sidebar.header("所要時間テスト")
 st.title("TEST")
 st.write("画像送受信にかかる時間を計算しようとするテストです。 画像をアップロードしていただくと時間が表示されます。")
 
-region = st.text_input("검색할 지역을 입력해주세요(ex 영등포구 or 속초시)", value="서울특별시 중구")
+region = st.text_input("現在の地域を入力してください。 （例:東京市）", value="東京市）")
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 start = time()
 

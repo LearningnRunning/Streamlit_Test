@@ -40,6 +40,47 @@ def MakeSensitive(OnlyFace):
 
     return combined
 
+def MakePore(cropped_img):
+    lab = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=6.5,tileGridSize=(15, 15))
+    l = clahe.apply(l)
+    lab = cv2.merge((l, a, b))
+
+
+    cont_dst = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    gray = cv2.cvtColor(cont_dst, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (23, 23), 0)
+
+
+    canny = cv2.Canny(blurred, 40, 60)
+
+    _, thresh = cv2.threshold(blurred, 30, 200, cv2.THRESH_BINARY)
+
+    canny_th = cv2.Canny(thresh, 1, 3)
+
+    # Create a kernel for dilation
+    kernel = np.ones((7,7), np.uint8)
+    # Dilate the edges to make them thicker
+    thicker = 7
+    dilated_edges = cv2.dilate(canny_th, kernel, iterations=thicker)
+
+    result = cv2.subtract(canny, dilated_edges) 
+    # Create a kernel for dilation
+    kernel = np.ones((3,3), np.uint8)
+    # Dilate the edges to make them thicker
+    thicker = 2
+    dilated_result= cv2.dilate(result, kernel, iterations=thicker)
+    result_color = cv2.cvtColor(dilated_result, cv2.COLOR_GRAY2BGR)
+    # Set the color of the edges to red
+    result_color[dilated_result != 0] = [24, 133, 255]
+
+    alpha = 0.5  # blend factor
+    beta = 0.5   # blend factor
+    gamma = 0    # scalar added to each sum
+    combined = cv2.addWeighted(cropped_img, alpha, result_color, beta, gamma)
+
+    return combined
 
 st.sidebar.header("所要時間テスト")
 
@@ -55,12 +96,13 @@ if uploaded_file is not None:
     
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
-    result = MakeSensitive(image)
+    sensitive_res = MakeSensitive(image)
+    pore_res = MakePore(image)
     # OnlyFace ,pore, OnlyWrinkle = FaceSegmentation(image)
     # result = MakePore(OnlyFace)
-    result
 
-    st.image(result, channels="BGR")
+    st.image(sensitive_res, channels="BGR")
+    st.image(pore_res, channels="BGR")
     result_time = f"{time() - start:.4f} 秒かかりました。"
     st.write(result_time)
     print(result_time)

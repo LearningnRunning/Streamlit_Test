@@ -13,7 +13,7 @@ st.sidebar.header("所要時間テスト")
 st.title("TEST")
 st.write("画像送受信にかかる時間を計算しようとするテストです。 画像をアップロードしていただくと時間が表示されます。")
 
-region = st.text_input("現在の地域を入力してください。 （例:東京市）", value="東京市）")
+region = st.text_input("現在の地域を入力してください。 （例:東京市）", value="東京市")
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 start = time()
 
@@ -26,6 +26,7 @@ if uploaded_file is not None:
     st.image(image, channels="BGR")
     result_time = f"{time() - start:.4f} sec"
     st.write(result_time)
+    print(result_time)
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
     save_df = pd.concat([save_df, new_row])
     save_df.to_csv('result_time.csv', encoding='utf-8-sig', index=False)

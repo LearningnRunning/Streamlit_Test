@@ -1,6 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
+from FaceMesh import *
 from time import time
 
 
@@ -16,7 +17,8 @@ if uploaded_file is not None:
     
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
-    
-    st.image(image, channels="BGR")
+    OnlyFace ,pore, OnlyWrinkle = FaceSegmentation(image)
+    result = MakePore(OnlyFace)
+    st.image(result, channels="BGR")
     print(f"{time() - start:.4f} sec")
     st.write(f"{time() - start:.4f} 秒かかりました。")

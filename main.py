@@ -1,14 +1,8 @@
 import streamlit as st
-import numpy as np
 import cv2
+import numpy as np
 from time import time
 
-from matplotlib import pyplot as plt
-def plt_show(img):
-    plt.figure(figsize=(10,10))
-    plt.axis('off') # 창에있는 x축 y축 제거
-    plt.imshow(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
-    plt.show()
 
 st.sidebar.header("所要時間テスト")
 

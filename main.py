@@ -10,11 +10,11 @@ def plt_show(img):
     plt.imshow(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
     plt.show()
 
-st.sidebar.header("Skin diagnosis transmit_receive test in Japan")
+st.sidebar.header("所要時間テスト")
 
 
 st.title("TEST")
-
+st.write("画像送受信にかかる時間を計算しようとするテストです。 画像をアップロードしていただくと時間が表示されます。")
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 start = time()
 
@@ -25,4 +25,4 @@ if uploaded_file is not None:
     
     st.image(image, channels="BGR")
     print(f"{time() - start:.4f} sec")
-    st.write(f"{time() - start:.4f} 초 소요되었습니다.")
+    st.write(f"{time() - start:.4f} 秒かかりました。")

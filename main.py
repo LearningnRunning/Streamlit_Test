@@ -3,10 +3,40 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import cv2
-
+from google.cloud import firestore
 from time import time
+from datetime import datetime
+from PIL import Image
+import io
+from google.oauth2 import service_account
+import json
 
 save_df = pd.read_csv('result_time.csv')
+
+
+def report(region, img):
+    # Authenticate to Firestore with the JSON account key.
+    key_dict = json.loads(st.secrets['textkey'])
+    creds = service_account.Credentials.from_service_account_info(key_dict)
+    db = firestore.Client(credentials=creds)
+
+    data = {
+        'region': region,
+        'img': img,
+        'datetime': datetime.now()
+        }
+    # Create a reference to the Google post.
+    doc_ref = db.collection('test_img').add(data)
+
+    return doc_ref[1].id, db
+
+
+def retrieve(id, db):
+    doc_ref = db.collection('test_img').document(id)
+    doc = doc_ref.get().to_dict()
+    image_bytes = doc['img']
+    return image_bytes
+
 
 def MakeSensitive(OnlyFace):
     # Split image into BGR channels
@@ -71,11 +101,6 @@ def MakePore(cropped_img):
     # Set the color of the edges to red
     result_color[dilated_result != 0] = [24, 133, 255]
 
-    # alpha = 0.5  # blend factor
-    # beta = 0.5   # blend factor
-    # gamma = 0    # scalar added to each sum
-    # combined = cv2.addWeighted(cropped_img, alpha, result_color, beta, gamma)
-
     return result_color
 
 def MakeWrinkle(OnlyWrinkle):
@@ -116,20 +141,33 @@ uploaded_file = st.file_uploader("画像を入力してください。", type=["
 start = time()
 
 if uploaded_file is not None:
-    
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    # assume `uploaded_file` is the image uploaded from Streamlit
+    image = Image.open(uploaded_file)
+
+    # resize the image to (1862, 4032)
+    resized_image = image.resize((1862, 4032))
+
+    # convert the image to byte type
+    buffered = io.BytesIO()
+    resized_image.save(buffered, format="JPEG")
+    byte_image = buffered.getvalue()
+
+
+    id, db = report(region, byte_image)
+    img = retrieve(id, db)
+    # f1 = FireStore(region, uploaded_file.read())
+    # img = f1.retrieve()
+
+    file_bytes = np.asarray(bytearray(img), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
+
+    st.image(image, channels="BGR")
+
+    
 
     sensitive_res = MakeSensitive(image)
     pore_res = MakePore(image)
     
-
-
-    
-    result_time = f"{time() - start:.4f} 秒かかりました。"
-    
-
-
     alpha = 0.5  # blend factor
     beta = 0.5   # blend factor
     gamma = 0    # scalar added to each sum
@@ -141,8 +179,10 @@ if uploaded_file is not None:
     st.image(pore_combined, channels="BGR")
     # st.image(wrinkle_combined, channels="BGR")
 
+    result_time = f"{time() - start:.4f} 秒かかりました。"
     st.write(result_time)
     print(result_time)
+
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
     save_df = pd.concat([save_df, new_row])
     save_df.to_csv('result_time.csv', encoding='utf-8-sig', index=False)

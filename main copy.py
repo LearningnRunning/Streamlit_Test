@@ -1,13 +1,12 @@
 import streamlit as st
 
 import numpy as np
-import pandas as pd
 import mediapipe as mp
 import cv2
 
 from time import time
 
-save_df = pd.read_csv('result_time.csv')
+
 
 
 def display_mono(list,img):
@@ -308,6 +307,3 @@ if uploaded_file is not None:
 
     st.write(result_time)
     print(result_time)
-    new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
-    save_df = pd.concat([save_df, new_row])
-    save_df.to_csv('result_time.csv', encoding='utf-8-sig', index=False)

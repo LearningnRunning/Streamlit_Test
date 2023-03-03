@@ -14,7 +14,7 @@ import json
 save_df = pd.read_csv('result_time.csv')
 
 
-def report(region, img):
+def report(region, img, result_time):
     # Authenticate to Firestore with the JSON account key.
     key_dict = json.loads(st.secrets['textkey'])
     creds = service_account.Credentials.from_service_account_info(key_dict)
@@ -23,7 +23,8 @@ def report(region, img):
     data = {
         'region': region,
         'img': img,
-        'datetime': datetime.now()
+        'datetime': datetime.now(),
+        'time' : result_time
         }
     # Create a reference to the Google post.
     doc_ref = db.collection('test_img').add(data)
@@ -153,17 +154,18 @@ if uploaded_file is not None:
     byte_image = buffered.getvalue()
 
 
-    id, db = report(region, byte_image)
-    img = retrieve(id, db)
+
+
+
+    # img = retrieve(id, db)
     # f1 = FireStore(region, uploaded_file.read())
     # img = f1.retrieve()
 
-    file_bytes = np.asarray(bytearray(img), dtype=np.uint8)
-    image = cv2.imdecode(file_bytes, 1)
+    # file_bytes = np.asarray(bytearray(resized_image), dtype=np.uint8)
+    np_image = np.array(resized_image)
 
-    st.image(image, channels="BGR")
-
-    
+    # convert the NumPy array to an OpenCV image format
+    image = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
 
     sensitive_res = MakeSensitive(image)
     pore_res = MakePore(image)
@@ -181,7 +183,7 @@ if uploaded_file is not None:
 
     result_time = f"{time() - start:.4f} 秒かかりました。"
     st.write(result_time)
-    print(result_time)
+    id, db = report(region, byte_image, result_time)
 
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
     save_df = pd.concat([save_df, new_row])

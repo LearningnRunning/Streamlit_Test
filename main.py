@@ -181,8 +181,8 @@ if uploaded_file is not None:
     st.image(pore_combined, channels="BGR")
     # st.image(wrinkle_combined, channels="BGR")
 
-    result_time = f"{time() - start:.4f} 秒かかりました。"
-    st.write(result_time)
+    result_time = time() - start:.4f
+    st.write(f"{result_time} 秒かかりました。")
     id, db = report(region, byte_image, result_time)
 
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})

@@ -19,7 +19,7 @@ def report(region, img, result_time):
     key_dict = json.loads(st.secrets['textkey'])
     creds = service_account.Credentials.from_service_account_info(key_dict)
     db = firestore.Client(credentials=creds)
-
+    result_time = f"{time() - start:.4f}"
     data = {
         'region': region,
         'img': img,
@@ -29,7 +29,7 @@ def report(region, img, result_time):
     # Create a reference to the Google post.
     doc_ref = db.collection('test_img').add(data)
 
-    return doc_ref[1].id, db
+    return doc_ref[1].id, db, result_time
 
 
 def retrieve(id, db):
@@ -139,9 +139,13 @@ st.write("画像送受信にかかる時間を計算しようとするテスト�
 
 region = st.text_input("現在の地域を入力してください。 （例:東京市）", value="東京市")
 uploaded_file = st.file_uploader("画像を入力してください。", type=["jpg", "jpeg", "png"])
-start = time()
+
+alpha = 0.5  # blend factor
+beta = 0.5   # blend factor
+gamma = 0    # scalar added to each sum
 
 if uploaded_file is not None:
+    start = time()
     # assume `uploaded_file` is the image uploaded from Streamlit
     image = Image.open(uploaded_file)
 
@@ -152,9 +156,6 @@ if uploaded_file is not None:
     buffered = io.BytesIO()
     resized_image.save(buffered, format="JPEG")
     byte_image = buffered.getvalue()
-
-
-
 
 
     # img = retrieve(id, db)
@@ -170,9 +171,7 @@ if uploaded_file is not None:
     sensitive_res = MakeSensitive(image)
     pore_res = MakePore(image)
     
-    alpha = 0.5  # blend factor
-    beta = 0.5   # blend factor
-    gamma = 0    # scalar added to each sum
+
     sensitive_combined = cv2.addWeighted(image, alpha, sensitive_res, beta, gamma)
     pore_combined = cv2.addWeighted(image, alpha, pore_res, beta, gamma)
 
@@ -181,10 +180,11 @@ if uploaded_file is not None:
     st.image(pore_combined, channels="BGR")
     # st.image(wrinkle_combined, channels="BGR")
 
-    result_time = f"{time() - start:.4f}"
+    
+    
+    id, db, result_time = report(region, byte_image, start)
+    
     st.write(result_time + "秒かかりました。")
-    id, db = report(region, byte_image, result_time)
-
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
     save_df = pd.concat([save_df, new_row])
     save_df.to_csv('result_time.csv', encoding='utf-8-sig', index=False)

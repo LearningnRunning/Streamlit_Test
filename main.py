@@ -10,10 +10,6 @@ from PIL import Image
 import io
 from google.oauth2 import service_account
 import json
-
-save_df = pd.read_csv('result_time.csv')
-
-
 def report(region, img, result_time):
     # Authenticate to Firestore with the JSON account key.
     key_dict = json.loads(st.secrets['textkey'])
@@ -186,5 +182,3 @@ if uploaded_file is not None:
     
     st.write(result_time + "秒かかりました。")
     new_row = pd.DataFrame({"region": [region], "sec": [result_time]})
-    save_df = pd.concat([save_df, new_row])
-    save_df.to_csv('result_time.csv', encoding='utf-8-sig', index=False)
